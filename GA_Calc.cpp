@@ -77,8 +77,8 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 	switch(flag){
 		case INIT:
 			setParameter("V0 (mV)", QString::number(V0)); // initialized in mV, display in mV
-			setParameter("GA_max (mS/cm^2)", QString::number(G_A_max * 100)); // initialized in mS/mm^2, display in mS/cm^2
-			setParameter("EA (mV)", QString::number(E_A)); // initialized in mV, display in mV
+			setParameter("GA_MAX (mS/cm^2)", QString::number(GA_MAX * 100)); // initialized in mS/mm^2, display in mS/cm^2
+			setParameter("EA (mV)", QString::number(EA)); // initialized in mV, display in mV
 			setParameter("Cm (uF/cm^2)", QString::number(Cm * 100)); // initialized in uF/mm^2, display in uF/cm^2
 			setParameter("Rate (Hz)", rate);
 			setState("a",a);
@@ -89,7 +89,7 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 		case MODIFY:
 			V0 = getParameter("V0 (mV)").toDouble();
 			Cm = getParameter("Cm (uF/cm^2)").toDouble() / 100;
-			GA_max = getParameter("G_A_max (mS/cm^2)").toDouble() / 100;
+			GA_max = getParameter("GA_MAX (mS/cm^2)").toDouble() / 100;
 			E_A = getParameter("EA (mV)").toDouble();
 			rate = getParameter("Rate (Hz)").toDouble();
 			steps = static_cast<int> (ceil(period * rate));
@@ -110,7 +110,7 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 void GA_Block::initParameters() {
 	V0 = -65; // mV
 	Cm = 1e-2; // uF/mm^2
-	GA_max = 0.477;
+	GA_MAX = 0.477;
 	EA = -75.0;
 	rate = 40000;
 	a = a_inf(V0);
@@ -130,5 +130,5 @@ void GA_Calc::solve(double dt, double *y, double V){
 void GA_Calc::derivs(double *y, double *dydt, double V){
 	da = (a_inf(V) - a) / tau_a(V);
 	db = (b_inf(V) - b) / tau_b(V);
-	IA = G_A * (V - E_A) * 1e-6 ;
+	IA = GA * (V - EA) * 1e-6 ;
 }

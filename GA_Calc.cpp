@@ -65,7 +65,7 @@ void GA_Calc::execute(void)
 	V = input(0)*1e3; //converts to mV
 
 	for (int i = 0; i < steps; ++i){
-		solve(period / steps, y); 	
+		solve(period / steps, y,V); 	
 	}
 
 	output(0) = GA;
@@ -89,8 +89,8 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 		case MODIFY:
 			V0 = getParameter("V0 (mV)").toDouble();
 			Cm = getParameter("Cm (uF/cm^2)").toDouble() / 100;
-			GA_max = getParameter("GA_MAX (mS/cm^2)").toDouble() / 100;
-			E_A = getParameter("EA (mV)").toDouble();
+			GA_MAX = getParameter("GA_MAX (mS/cm^2)").toDouble() / 100;
+			EA = getParameter("EA (mV)").toDouble();
 			rate = getParameter("Rate (Hz)").toDouble();
 			steps = static_cast<int> (ceil(period * rate));
 			a = a_inf(V0);
@@ -107,7 +107,7 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 	}
 }
 
-void GA_Block::initParameters() {
+void GA_Calc::initParameters() {
 	V0 = -65; // mV
 	Cm = 1e-2; // uF/mm^2
 	GA_MAX = 0.477;
@@ -122,7 +122,7 @@ void GA_Block::initParameters() {
 
 void GA_Calc::solve(double dt, double *y, double V){
 	double dydt[2];
-	derivs(y, dydt);
+	derivs(y, dydt,V);
 	for (size_t i = 0; i < 2; ++i)
 		y[i] += dt * dydt[i];
 }

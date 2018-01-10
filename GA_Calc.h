@@ -23,10 +23,11 @@ class GA_Calc : public DefaultGUIModel
 		double y[2];
 		double period;
 		int steps;
-	
+		
+		double V;
 		double V0;
 		double Cm;
-		double GA_max;
+		double GA_MAX;
 		double EA;
 		double IA;
 		double rate;

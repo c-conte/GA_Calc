@@ -16,8 +16,8 @@ class GA_Calc : public DefaultGUIModel
 	
 	private:
 	
-		void derivs(double *, double *);
-		void solve(double, double *);
+		void derivs(double *, double *, double);
+		void solve(double, double *, double);
 		void initParameters();
 	
 		double y[2];

@@ -20,7 +20,7 @@ class GA_Calc : public DefaultGUIModel
 		void solve(double, double *, double);
 		void initParameters();
 	
-		double y[2];
+		double y[1];
 		double period;
 		int steps;
 		

@@ -84,7 +84,7 @@ void GA_Calc::execute(void)
 		solve(period / steps, y,V); 	
 	}
 
-	output(0) = GA;
+	output(0) = IA;
 
 	return;
 }

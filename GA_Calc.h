@@ -23,7 +23,7 @@ class GA_Calc : public DefaultGUIModel
 		double y[1];
 		double period;
 		int steps;
-		
+		double a;
 		double V;
 		double V0;
 		double Cm;

@@ -1,4 +1,4 @@
-PLUGIN_NAME = GA_Block
+PLUGIN_NAME = GA_Calc
 
 HEADERS = GA_Calc.h
 

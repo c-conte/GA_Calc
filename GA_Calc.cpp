@@ -47,11 +47,11 @@ static DefaultGUIModel::variable_t vars[] =
 	{"V0 (mV)", "Initial membrane potential (mV)", DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE, },
 	{"GA_MAX", "Conductance", DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE},
 	{"EA", "A-type K+ Reversal Potential", DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE},
-	{"Cm", "Membrane Capacitance (pF)", DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE},
-	{ "Rate (Hz)", "Rate of integration (Hz)", DefaultGUIModel::PARAMETER | DefaultGUIModel::UINTEGER, },
-	{ "a", "A-type Potassium Activation", DefaultGUIModel::STATE, },
-	{ "b", "A-type Potassium Inactivation", DefaultGUIModel::STATE, },
-	{ "IA", "A-type Potassium Current", DefaultGUIModel::STATE, },
+	{"Rate (Hz)", "Rate of integration (Hz)", DefaultGUIModel::PARAMETER | DefaultGUIModel::UINTEGER, },
+	{"Toggle Block", "1 = block, 0 = off", DefaultGUIModel::PARAMETER | DefaultGUIModel::UINTEGER, },
+	{"a", "A-type Potassium Activation", DefaultGUIModel::STATE, },
+	{"b", "A-type Potassium Inactivation", DefaultGUIModel::STATE, },
+	{"IA", "A-type Potassium Current", DefaultGUIModel::STATE, },
 };
 
 static size_t num_vars = sizeof(vars) / sizeof(DefaultGUIModel::variable_t);
@@ -79,13 +79,16 @@ GA_Calc::~GA_Calc(void){}
 void GA_Calc::execute(void)
 {
 	V = input(0)*1e3; //converts to mV
-
+	
 	for (int i = 0; i < steps; ++i){
 		solve(period / steps, y,V); 	
 	}
-
-	output(0) = IA;
-
+	if(blockToggle == 1){
+		output(0) = IA;
+	}
+	else{
+		output(0) = 0;
+	}
 	return;
 }
 
@@ -93,10 +96,10 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 	switch(flag){
 		case INIT:
 			setParameter("V0 (mV)", QString::number(V0)); // initialized in mV, display in mV
-			setParameter("GA_MAX (mS/cm^2)", QString::number(GA_MAX * 100)); // initialized in mS/mm^2, display in mS/cm^2
-			setParameter("EA (mV)", QString::number(EA)); // initialized in mV, display in mV
-			setParameter("Cm (uF/cm^2)", QString::number(Cm * 100)); // initialized in uF/mm^2, display in uF/cm^2
+			setParameter("GA_MAX", QString::number(GA_MAX)); // initialized in mS/mm^2, display in mS/cm^2
+			setParameter("EA", QString::number(EA)); // initialized in mV, display in mV
 			setParameter("Rate (Hz)", rate);
+			setParameter("Toggle Block", blockToggle);
 			setState("a",a);
 			setState("b",b);
 			setState("IA",IA);
@@ -104,10 +107,10 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 
 		case MODIFY:
 			V0 = getParameter("V0 (mV)").toDouble();
-			Cm = getParameter("Cm (uF/cm^2)").toDouble() / 100;
-			GA_MAX = getParameter("GA_MAX (mS/cm^2)").toDouble() / 100;
-			EA = getParameter("EA (mV)").toDouble();
+			GA_MAX = getParameter("GA_MAX").toDouble();
+			EA = getParameter("EA").toDouble();
 			rate = getParameter("Rate (Hz)").toDouble();
+			blockToggle = getParameter("Toggle Block").toInt();
 			steps = static_cast<int> (ceil(period * rate));
 			a = a_inf(V0);
 			b = b_inf(V0);
@@ -125,13 +128,13 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 
 void GA_Calc::initParameters() {
 	V0 = -60.0; // mV
-	Cm = 1e-2; // uF/mm^2
 	GA_MAX = 40;
 	EA = -80;
-	rate = 40000;
+	rate = 400;
+	blockToggle = 0;
 	a = a_inf(V0);
 	b = .47;
-	period = RT::System::getInstance()->getPeriod() * 1e-9; // s
+	period = RT::System::getInstance()->getPeriod() * 1e-6; // s
 	steps = static_cast<int> (ceil(period * rate)); // calculate how many integrations to perform per execution step
 }
 
@@ -146,5 +149,5 @@ void GA_Calc::solve(double dt, double *y, double V){
 void GA_Calc::derivs(double *y, double *dydt, double V){
 	a = a_inf(V);
 	db = (b_inf(V) - b) / 150.0;
-	IA = GA * (V - EA) * 1e-6 ;
+	IA = GA * (V - EA);
 }

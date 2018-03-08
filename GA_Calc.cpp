@@ -34,6 +34,13 @@ static inline double b_inf(double V)
     return 1.0/(1.0+exp(-(V + 70.0)/-6.0));
 }
 
+static inline double
+tau_b(double V)
+{
+    //taub(v)=taub0 + (taub1-taub0)/(1+exp(-(v-tb)/sb))
+    return 10 + (200-10)/(1.0+exp(-(V-(-80))/10));
+}
+
 extern "C" Plugin::Object *createRTXIPlugin(void)
 {
 	return new GA_Calc();
@@ -51,7 +58,7 @@ static DefaultGUIModel::variable_t vars[] =
 	{"Toggle Block", "1 = block, 0 = off", DefaultGUIModel::PARAMETER | DefaultGUIModel::UINTEGER, },
 	{"a", "A-type Potassium Activation", DefaultGUIModel::STATE, },
 	{"b", "A-type Potassium Inactivation", DefaultGUIModel::STATE, },
-	{"IA", "A-type Potassium Current", DefaultGUIModel::STATE, },
+	{"GA", "Conductance of A-type Potassium Current", DefaultGUIModel::STATE, },
 };
 
 static size_t num_vars = sizeof(vars) / sizeof(DefaultGUIModel::variable_t);
@@ -61,9 +68,11 @@ static size_t num_vars = sizeof(vars) / sizeof(DefaultGUIModel::variable_t);
 #define da (dydt[0])
 #define db (dydt[1])
 */
-#define b (y[0])
-#define db (dydt[0])
-#define GA (GA_MAX*a*a*a*b)
+#define a (y[0])
+#define b (y[1])
+#define da (dydt[0])
+#define db (dydt[1])
+#define GACalc (GA_MAX*a*a*a*b)
 
 GA_Calc::GA_Calc(void) : DefaultGUIModel("GA_Calc", ::vars, ::num_vars)
 {
@@ -78,17 +87,18 @@ GA_Calc::~GA_Calc(void){}
 
 void GA_Calc::execute(void)
 {
-	V = input(0)*1e3; //converts to mV
 	
 	for (int i = 0; i < steps; ++i){
-		solve(period / steps, y,V); 	
-	}
-	if(blockToggle == 1){
-		output(0) = IA;
-	}
-	else{
+	    V = input(0)*1e3; //converts to mV
+	    solve(period / steps, y,V);
+	    if(blockToggle == 1){
+		output(0) = GA;
+	    }
+	    else{
 		output(0) = 0;
+	    } 	
 	}
+
 	return;
 }
 
@@ -102,7 +112,7 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 			setParameter("Toggle Block", blockToggle);
 			setState("a",a);
 			setState("b",b);
-			setState("IA",IA);
+			setState("GA",GA);
 			break;
 
 		case MODIFY:
@@ -117,7 +127,7 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 			break;
 
 		case PERIOD:
-			period = RT::System::getInstance()->getPeriod() * 1e-9; // time in seconds
+			period = RT::System::getInstance()->getPeriod() * 1e-6; // time in seconds
 			steps = static_cast<int> (ceil(period * rate));
 			break;
 
@@ -142,12 +152,12 @@ void GA_Calc::initParameters() {
 void GA_Calc::solve(double dt, double *y, double V){
 	double dydt[2];
 	derivs(y, dydt,V);
-	for (size_t i = 0; i < 1; ++i)
+	for (size_t i = 0; i < 2; ++i)
 		y[i] += dt * dydt[i];
 }
 
 void GA_Calc::derivs(double *y, double *dydt, double V){
-	a = a_inf(V);
-	db = (b_inf(V) - b) / 150.0;
-	IA = GA * (V - EA);
+	GA = GACalc;	
+	da = (a_inf(V) - a) / 2.0;
+	db = (b_inf(V) - b) / tau_b(V);
 }

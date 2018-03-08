@@ -20,7 +20,7 @@ class GA_Calc : public DefaultGUIModel
 		void solve(double, double *, double);
 		void initParameters();
 	
-		double y[1];
+		double y[2];
 		double period;
 		int steps;
 		double a;
@@ -29,7 +29,7 @@ class GA_Calc : public DefaultGUIModel
 		double Cm;
 		double GA_MAX;
 		double EA;
-		double IA;
+		double GA;
 		double rate;
 		int blockToggle;
 };

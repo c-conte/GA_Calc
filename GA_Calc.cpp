@@ -138,8 +138,8 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 
 void GA_Calc::initParameters() {
 	V0 = -60.0; // mV
-	GA_MAX = 40;
-	EA = -80;
+	GA_MAX = .1;
+	EA = -90;
 	rate = 400;
 	blockToggle = 0;
 	a = a_inf(V0);

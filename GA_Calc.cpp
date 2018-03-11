@@ -35,10 +35,10 @@ static inline double b_inf(double V)
 }
 
 static inline double
-tau_b(double V)
+tau_b(double V, double taub1)
 {
     //taub(v)=taub0 + (taub1-taub0)/(1+exp(-(v-tb)/sb))
-    return 10 + (200-10)/(1.0+exp(-(V-(-80))/10));
+    return 10 + (taub1-10)/(1.0+exp(-(V-(-80))/10));
 }
 
 extern "C" Plugin::Object *createRTXIPlugin(void)
@@ -50,12 +50,16 @@ extern "C" Plugin::Object *createRTXIPlugin(void)
 static DefaultGUIModel::variable_t vars[] = 
 {
 	{"Input Voltage (V)", "Input Voltage (V)", DefaultGUIModel::INPUT,}, //read in in volts, need to multiply by 1e3 to get mV
-	{"GA", "Calculated GA value", DefaultGUIModel::OUTPUT,},
+	{"GA", "Calculated GA value to M_Neuron", DefaultGUIModel::OUTPUT,},
+	{"IA", "Calculated IA value to Live", DefaultGUIModel::OUTPUT,},
 	{"V0 (mV)", "Initial membrane potential (mV)", DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE, },
-	{"GA_MAX", "Conductance", DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE},
-	{"EA", "A-type K+ Reversal Potential", DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE},
+	{"GA_MAX (uS)", "Conductance", DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE},
+	{"EK (mV)", "K+ Reversal Potential", DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE},
 	{"Rate (Hz)", "Rate of integration (Hz)", DefaultGUIModel::PARAMETER | DefaultGUIModel::UINTEGER, },
-	{"Toggle Block", "1 = block, 0 = off", DefaultGUIModel::PARAMETER | DefaultGUIModel::UINTEGER, },
+	{"On/Off", "1 = on, 0 = off", DefaultGUIModel::PARAMETER | DefaultGUIModel::UINTEGER, },
+    	{"taua", "",DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE, },
+    	{"taub1", "",DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE, },
+    	{"cm (nF)", "Specific membrane capacitance",DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE, },
 	{"a", "A-type Potassium Activation", DefaultGUIModel::STATE, },
 	{"b", "A-type Potassium Inactivation", DefaultGUIModel::STATE, },
 	{"GA", "Conductance of A-type Potassium Current", DefaultGUIModel::STATE, },
@@ -91,8 +95,9 @@ void GA_Calc::execute(void)
 	for (int i = 0; i < steps; ++i){
 	    V = input(0)*1e3; //converts to mV
 	    solve(period / steps, y,V);
-	    if(blockToggle == 1){
+	    if(onToggle == 1){
 		output(0) = GA;
+		output(1) = IA;
 	    }
 	    else{
 		output(0) = 0;
@@ -106,10 +111,13 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 	switch(flag){
 		case INIT:
 			setParameter("V0 (mV)", QString::number(V0)); // initialized in mV, display in mV
-			setParameter("GA_MAX", QString::number(GA_MAX)); // initialized in mS/mm^2, display in mS/cm^2
-			setParameter("EA", QString::number(EA)); // initialized in mV, display in mV
+			setParameter("GA_MAX (uS)", QString::number(GA_MAX)); // initialized in mS/mm^2, display in mS/cm^2
+			setParameter("EK (mV)", QString::number(EA)); // initialized in mV, display in mV
 			setParameter("Rate (Hz)", rate);
-			setParameter("Toggle Block", blockToggle);
+			setParameter("On/Off", onToggle);
+            		setParameter("taua", QString::number(taua));
+	    		setParameter("taub1", QString::number(taub1));
+            		setParameter("cm (nF)", QString::number(cm));
 			setState("a",a);
 			setState("b",b);
 			setState("GA",GA);
@@ -117,11 +125,14 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 
 		case MODIFY:
 			V0 = getParameter("V0 (mV)").toDouble();
-			GA_MAX = getParameter("GA_MAX").toDouble();
-			EA = getParameter("EA").toDouble();
+			GA_MAX = getParameter("GA_MAX (uS)").toDouble();
+			EA = getParameter("EK (mV)").toDouble();
 			rate = getParameter("Rate (Hz)").toDouble();
-			blockToggle = getParameter("Toggle Block").toInt();
+			onToggle = getParameter("On/Off").toInt();
 			steps = static_cast<int> (ceil(period * rate));
+	            	taua = getParameter("taua").toDouble();
+           		taub1 = getParameter("taub1").toDouble();
+			cm = getParameter("cm (nF)").toDouble();
 			a = a_inf(V0);
 			b = b_inf(V0);
 			break;
@@ -141,7 +152,10 @@ void GA_Calc::initParameters() {
 	GA_MAX = .1;
 	EA = -90;
 	rate = 400;
-	blockToggle = 0;
+	onToggle = 0;
+    	taua = 2.0;
+    	taub1 = 200.0;
+    	cm = 0.0187;
 	a = a_inf(V0);
 	b = .47;
 	period = RT::System::getInstance()->getPeriod() * 1e-6; // s
@@ -157,7 +171,8 @@ void GA_Calc::solve(double dt, double *y, double V){
 }
 
 void GA_Calc::derivs(double *y, double *dydt, double V){
-	GA = GACalc;	
-	da = (a_inf(V) - a) / 2.0;
-	db = (b_inf(V) - b) / tau_b(V);
+	GA = GACalc/cm;	
+	IA = GACalc*(V - EA)/cm;
+	da = (a_inf(V) - a) / taua;
+	db = (b_inf(V) - b) / tau_b(V,taub1);
 }

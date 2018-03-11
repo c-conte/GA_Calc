@@ -31,5 +31,9 @@ class GA_Calc : public DefaultGUIModel
 		double EA;
 		double GA;
 		double rate;
-		int blockToggle;
+		double taua;
+		double taub1;
+		double cm;
+		double IA;
+		int onToggle;
 };

@@ -63,6 +63,7 @@ static DefaultGUIModel::variable_t vars[] =
 	{"a", "A-type Potassium Activation", DefaultGUIModel::STATE, },
 	{"b", "A-type Potassium Inactivation", DefaultGUIModel::STATE, },
 	{"GA", "Conductance of A-type Potassium Current", DefaultGUIModel::STATE, },
+	{"IA", "Calculated IA value as a state", DefaultGUIModel::STATE, },
 };
 
 static size_t num_vars = sizeof(vars) / sizeof(DefaultGUIModel::variable_t);
@@ -121,6 +122,7 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 			setState("a",a);
 			setState("b",b);
 			setState("GA",GA);
+			setState("IA",IA);
 			break;
 
 		case MODIFY:
@@ -148,8 +150,8 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 }
 
 void GA_Calc::initParameters() {
-	V0 = -60.0; // mV
-	GA_MAX = .1;
+	V0 = 0; // mV
+	GA_MAX = .00055;
 	EA = -90;
 	rate = 400;
 	onToggle = 0;

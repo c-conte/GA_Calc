@@ -35,5 +35,6 @@ class GA_Calc : public DefaultGUIModel
 		double taub1;
 		double cm;
 		double IA;
+		double IACell;
 		int onToggle;
 };

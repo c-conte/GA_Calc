@@ -64,6 +64,7 @@ static DefaultGUIModel::variable_t vars[] =
 	{"b", "A-type Potassium Inactivation", DefaultGUIModel::STATE, },
 	{"GA", "Conductance of A-type Potassium Current", DefaultGUIModel::STATE, },
 	{"IA", "Calculated IA value as a state", DefaultGUIModel::STATE, },
+	{"IACell", "IA value that the cell receives", DefaultGUIModel::STATE, },
 };
 
 static size_t num_vars = sizeof(vars) / sizeof(DefaultGUIModel::variable_t);
@@ -123,6 +124,7 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 			setState("b",b);
 			setState("GA",GA);
 			setState("IA",IA);
+			setState("IACell",IACell);
 			break;
 
 		case MODIFY:
@@ -175,6 +177,7 @@ void GA_Calc::solve(double dt, double *y, double V){
 void GA_Calc::derivs(double *y, double *dydt, double V){
 	GA = GACalc/cm;	
 	IA = -GACalc*(V - EA)/cm;
+	IACell = IA * 2e-9;
 	da = (a_inf(V) - a) / taua;
 	db = (b_inf(V) - b) / tau_b(V,taub1);
 }

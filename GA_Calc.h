@@ -33,6 +33,10 @@ class GA_Calc : public DefaultGUIModel
 		double rate;
 		double taua;
 		double taub1;
+		double thetaa;
+		double thetab;
+		double sigmaa;
+		double sigmab;
 		double cm;
 		double IA;
 		double IACell;

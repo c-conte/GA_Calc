@@ -22,13 +22,13 @@ static inline double tau_b(double V)
 	return 1.24e-3 + 2.678e-3 / (1 + exp(0.0624 * (V + 50.0)));
 }
 */
-static inline double a_inf(double V)
+static inline double a_inf(double V, double thetaa, double sigmaa)
 {
     //ainf(v)=1/(1+exp(-(v-thetaa)/sigmaa))
     return 1.0/(1.0+exp(-(V + 50.0)/20.0));
 }
 
-static inline double b_inf(double V)
+static inline double b_inf(double V, double thetab, double sigmab)
 {
     //binf(v)=1/(1+exp(-(v-thetab)/sigmab))
     return 1.0/(1.0+exp(-(V + 70.0)/-6.0));
@@ -59,6 +59,10 @@ static DefaultGUIModel::variable_t vars[] =
 	{"On/Off", "1 = on, 0 = off", DefaultGUIModel::PARAMETER | DefaultGUIModel::UINTEGER, },
     	{"taua", "",DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE, },
     	{"taub1", "",DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE, },
+    	{"thetaa", "",DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE, },
+    	{"thetab", "",DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE, },
+    	{"sigmaa", "",DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE, },
+    	{"sigmab", "",DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE, },
     	{"cm (nF)", "Specific membrane capacitance",DefaultGUIModel::PARAMETER | DefaultGUIModel::DOUBLE, },
 	{"a", "A-type Potassium Activation", DefaultGUIModel::STATE, },
 	{"b", "A-type Potassium Inactivation", DefaultGUIModel::STATE, },
@@ -119,6 +123,10 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 			setParameter("On/Off", onToggle);
             		setParameter("taua", QString::number(taua));
 	    		setParameter("taub1", QString::number(taub1));
+			setParameter("thetaa", QString::number(thetaa));
+	    		setParameter("thetab", QString::number(thetab));
+		        setParameter("sigmaa", QString::number(sigmaa));
+	    		setParameter("sigmab", QString::number(sigmab));
             		setParameter("cm (nF)", QString::number(cm));
 			setState("a",a);
 			setState("b",b);
@@ -136,9 +144,13 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 			steps = static_cast<int> (ceil(period * rate));
 	            	taua = getParameter("taua").toDouble();
            		taub1 = getParameter("taub1").toDouble();
+	            	thetaa = getParameter("thetaa").toDouble();
+           		thetab = getParameter("thetab").toDouble();
+	            	sigmaa = getParameter("sigmaa").toDouble();
+           		sigmab = getParameter("sigmab").toDouble();
 			cm = getParameter("cm (nF)").toDouble();
-			a = a_inf(V0);
-			b = b_inf(V0);
+			a = a_inf(V0, thetaa, sigmaa);
+			b = b_inf(V0, thetab, sigmab);
 			break;
 
 		case PERIOD:
@@ -159,8 +171,12 @@ void GA_Calc::initParameters() {
 	onToggle = 0;
     	taua = 2.0;
     	taub1 = 200.0;
-    	cm = 0.0187;
-	a = a_inf(V0);
+	thetaa = 50.0;
+        thetab = 70.0;
+        sigmaa = 20.0;
+        sigmab = -6.0;		
+   	cm = 0.0187;
+	a = a_inf(V0, thetaa, sigmaa);
 	b = .47;
 	period = RT::System::getInstance()->getPeriod() * 1e-6; // s
 	steps = static_cast<int> (ceil(period * rate)); // calculate how many integrations to perform per execution step
@@ -178,6 +194,6 @@ void GA_Calc::derivs(double *y, double *dydt, double V){
 	GA = GACalc/cm;	
 	IA = -GACalc*(V - EA)/cm;
 	IACell = IA * 2e-9;
-	da = (a_inf(V) - a) / taua;
-	db = (b_inf(V) - b) / tau_b(V,taub1);
+	da = (a_inf(V, thetaa, sigmaa) - a) / taua;
+	db = (b_inf(V, thetab, sigmab) - b) / tau_b(V,taub1);
 }

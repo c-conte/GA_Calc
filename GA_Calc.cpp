@@ -191,8 +191,8 @@ void GA_Calc::solve(double dt, double *y, double V){
 }
 
 void GA_Calc::derivs(double *y, double *dydt, double V){
-	GA = GACalc/cm;	
-	IA = -GACalc*(V - EA)/cm;
+	GA = GACalc;	
+	IA = GACalc*(V - EA);
 	IACell = IA * 2e-9;
 	da = (a_inf(V, thetaa, sigmaa) - a) / taua;
 	db = (b_inf(V, thetab, sigmab) - b) / tau_b(V,taub1);

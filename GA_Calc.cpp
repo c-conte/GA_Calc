@@ -25,13 +25,13 @@ static inline double tau_b(double V)
 static inline double a_inf(double V, double thetaa, double sigmaa)
 {
     //ainf(v)=1/(1+exp(-(v-thetaa)/sigmaa))
-    return 1.0/(1.0+exp(-(V + 30.0)/20.0));
+    return 1.0/(1.0+exp(-(V - thetaa)/20.0));
 }
 
 static inline double b_inf(double V, double thetab, double sigmab)
 {
     //binf(v)=1/(1+exp(-(v-thetab)/sigmab))
-    return 1.0/(1.0+exp(-(V + 70.0)/-6.0));
+    return 1.0/(1.0+exp(-(V - thetab)/-6.0));
 }
 
 static inline double
@@ -171,8 +171,8 @@ void GA_Calc::initParameters() {
 	onToggle = 0;
     	taua = 2.0;
     	taub1 = 200.0;
-	thetaa = 50.0;
-        thetab = 70.0;
+	thetaa = -30.0;
+        thetab = -70.0;
         sigmaa = 20.0;
         sigmab = -6.0;		
    	cm = 0.0187;
@@ -192,7 +192,7 @@ void GA_Calc::solve(double dt, double *y, double V){
 
 void GA_Calc::derivs(double *y, double *dydt, double V){
 	GA = GACalc;	
-	IA = GACalc*(V - EA)/cm;
+	IA = -GACalc*(V - EA)/cm;
 	IACell = IA * 2e-9;
 	da = (a_inf(V, thetaa, sigmaa) - a) / taua;
 	db = (b_inf(V, thetab, sigmab) - b) / tau_b(V,taub1);

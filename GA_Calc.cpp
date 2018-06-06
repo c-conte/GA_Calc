@@ -25,7 +25,7 @@ static inline double tau_b(double V)
 static inline double a_inf(double V, double thetaa, double sigmaa)
 {
     //ainf(v)=1/(1+exp(-(v-thetaa)/sigmaa))
-    return 1.0/(1.0+exp(-(V + 50.0)/20.0));
+    return 1.0/(1.0+exp(-(V + 30.0)/20.0));
 }
 
 static inline double b_inf(double V, double thetab, double sigmab)
@@ -165,8 +165,8 @@ void GA_Calc::update(DefaultGUIModel::update_flags_t flag){
 
 void GA_Calc::initParameters() {
 	V0 = 0; // mV
-	GA_MAX = .00055;
-	EA = -90;
+	GA_MAX = .3;
+	EA = -100;
 	rate = 400;
 	onToggle = 0;
     	taua = 2.0;

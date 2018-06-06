@@ -25,13 +25,13 @@ static inline double tau_b(double V)
 static inline double a_inf(double V, double thetaa, double sigmaa)
 {
     //ainf(v)=1/(1+exp(-(v-thetaa)/sigmaa))
-    return 1.0/(1.0+exp(-(V - thetaa)/20.0));
+    return 1.0/(1.0+exp(-(V - thetaa)/sigmaa));
 }
 
 static inline double b_inf(double V, double thetab, double sigmab)
 {
     //binf(v)=1/(1+exp(-(v-thetab)/sigmab))
-    return 1.0/(1.0+exp(-(V - thetab)/-6.0));
+    return 1.0/(1.0+exp(-(V - thetab)/sigmab));
 }
 
 static inline double
